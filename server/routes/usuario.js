@@ -6,9 +6,19 @@ const saltRounds = 10;
 // MODELOS DE BASE DE DATOS
 const Usuario = require('../models/usuario');
 
+// MIDDLEWARE PARA VERIFICAR TOKEN
+const { verificacionToken, verificacionAdminRole } = require('../middlewares/auth');
+
 const app = express();
 
-app.get('/usuario', function (req, res) {
+app.get('/usuario', verificacionToken, (req, res) => {
+
+    // esta informacion se tiene porque paso por el middleware
+    // return res.json({
+    //     usuario: req.usuario,
+    //     nombre: req.usuario.nombre,
+    //     email: req.usuario.email
+    // });
 
     let desde = req.query.desde || 0 ; 
     desde = Number(desde);
@@ -32,7 +42,7 @@ app.get('/usuario', function (req, res) {
                     });
                 } 
                 
-                Usuario.count(condicion, (err, conteo) =>{
+                Usuario.countDocuments(condicion, (err, conteo) =>{
 
                     if( err ){
                         return res.status(400).json({
@@ -51,106 +61,106 @@ app.get('/usuario', function (req, res) {
 
 
             } )
-  });
+});
   
-  app.post('/usuario', function (req, res) {
-        let body = req.body;
-        let usuario = new Usuario({
-            nombre: body.nombre,
-            email: body.email,
-            password: bcrypt.hashSync( body.password, saltRounds ) ,
-            //img: body.img,
-            role: body.role
-        });
+app.post('/usuario', [verificacionToken, verificacionAdminRole], (req, res) => {
+    let body = req.body;
+    let usuario = new Usuario({
+        nombre: body.nombre,
+        email: body.email,
+        password: bcrypt.hashSync( body.password, saltRounds ) ,
+        //img: body.img,
+        role: body.role
+    });
 
-        usuario.save( (err, usuarioDB) =>{
-            if( err ){
-                return res.status(400).json({
-                    ok: false,
-                    err
-                });
-            } 
-            
-            res.json({
-                ok: true,
-                usuario: usuarioDB
-            });
-
-
-        });
-  });
-  
-  app.put('/usuario/:id', function (req, res) {
-      let id = req.params.id;
-      // PARA ACTUALIZAR SOLO LAS PROPIEDADES QUE QUIERO
-      let body = _.pick(req.body, [ 'nombre', 'email','img','role','estado' ]);
-
-      Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true}, (err, usuarioDB)=> {
-
+    usuario.save( (err, usuarioDB) =>{
         if( err ){
             return res.status(400).json({
                 ok: false,
                 err
             });
-        }         
-
-        res.json({ 
+        } 
+        
+        res.json({
             ok: true,
             usuario: usuarioDB
-        });        
+        });
 
-      });
 
-  });
-  
-  app.delete('/usuario/:id', function (req, res) {
-    
+    });
+});
+
+app.put('/usuario/:id', [verificacionToken, verificacionAdminRole], (req, res) => {
     let id = req.params.id;
-    let cambiaEstado = {
-        estado: false
-    };
-    //Usuario.findByIdAndUpdate(id, { $set: { estado: false }}, { new: true, runValidators: true}, (err, usuarioSoftDelete)=> {
-    Usuario.findByIdAndUpdate(id, cambiaEstado, { new: true}, (err, usuarioSoftDelete)=> {
+    // PARA ACTUALIZAR SOLO LAS PROPIEDADES QUE QUIERO
+    let body = _.pick(req.body, [ 'nombre', 'email','img','role','estado' ]);
 
-        if( err ){
-            return res.status(400).json({
-                ok: false,
-                err
-            });
-        }         
+    Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true}, (err, usuarioDB)=> {
 
-        res.json({ 
-            ok: true,
-            usuario: usuarioSoftDelete
-        });        
+    if( err ){
+        return res.status(400).json({
+            ok: false,
+            err
+        });
+    }         
 
-      });    
-    // Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
+    res.json({ 
+        ok: true,
+        usuario: usuarioDB
+    });        
 
-    //     if( err ){
-    //         return res.status(400).json({
-    //             ok: false,
-    //             err
-    //         });
-    //     }   
-        
-    //     if(!usuarioBorrado) {
-    //         return res.status(400).json({
-    //             ok: false,
-    //             error: {
-    //                 message: 'Usuario no encontrado'
-    //             }
-    //         }); 
-    //     }else{
-    //         res.json({ 
-    //             ok: true,
-    //             usuario: usuarioBorrado
-    //         });   
-    //     }
+    });
 
-    // });
+});
+
+app.delete('/usuario/:id', [verificacionToken, verificacionAdminRole], (req, res) =>{
+
+let id = req.params.id;
+let cambiaEstado = {
+    estado: false
+};
+//Usuario.findByIdAndUpdate(id, { $set: { estado: false }}, { new: true, runValidators: true}, (err, usuarioSoftDelete)=> {
+Usuario.findByIdAndUpdate(id, cambiaEstado, { new: true}, (err, usuarioSoftDelete)=> {
+
+    if( err ){
+        return res.status(400).json({
+            ok: false,
+            err
+        });
+    }         
+
+    res.json({ 
+        ok: true,
+        usuario: usuarioSoftDelete
+    });        
+
+    });    
+// Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
+
+//     if( err ){
+//         return res.status(400).json({
+//             ok: false,
+//             err
+//         });
+//     }   
+    
+//     if(!usuarioBorrado) {
+//         return res.status(400).json({
+//             ok: false,
+//             error: {
+//                 message: 'Usuario no encontrado'
+//             }
+//         }); 
+//     }else{
+//         res.json({ 
+//             ok: true,
+//             usuario: usuarioBorrado
+//         });   
+//     }
+
+// });
 
 
-  });
+});
 
-  module.exports = app;
+module.exports = app;
