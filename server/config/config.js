@@ -33,3 +33,8 @@ process.env.CADUCIDAD_TOKEN = 60 * 60 * 24 * 30;
 // SEED SEMILLA DE AUTENTICACION
 // ===================================
 process.env.SEED = process.env.SEED || 'este-es-el-seed-desarrollo';
+
+// ===================================
+// GOOGLE CLIENT ID
+// ===================================
+process.env.CLIENT_ID = process.env.CLIENT_ID || '677843603656-hah2jd4stm38up7n0uvtn14kn1a1502q.apps.googleusercontent.com';
