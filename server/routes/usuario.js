@@ -60,7 +60,7 @@ app.get('/usuario', verificacionToken, (req, res) => {
                 });
 
 
-            } )
+            } );
 });
   
 app.post('/usuario', [verificacionToken, verificacionAdminRole], (req, res) => {
