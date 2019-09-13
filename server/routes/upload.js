@@ -14,6 +14,60 @@ app.use( fileUpload({ useTempFiles: true }) );
 // este middleware hace que todos los archivos que se carguen 
 // se cargan en el req.files
 
+app.put('/uploadTemp', (req,res) => {
+
+
+    if (Object.keys(req.files).length == 0) {
+        return res.status(400).json({
+            ok: false,
+            err:{
+                message: 'No se ha seleccionado ningun archivo'
+            }
+        });
+    }
+
+    // nombre del input donde se sube el archivo
+    let archivo = req.files.archivo;
+    let nombreArchivoCortado = archivo.name.split('.');
+    let extension = nombreArchivoCortado[nombreArchivoCortado.length -1];
+    // nombre nombreArchivo[0]
+    // extension nombreArchivo[1]
+
+    // Extensiones permitidas
+    let extensionesValidas = ['png','jpg','gif','jpeg'];
+
+    if( extensionesValidas.indexOf( extension) < 0 ){
+        return res.status(400).json({
+            ok: false,
+            err: {
+                message: 'Las extensiones validas son: ' + extensionesValidas.join(', '),
+                ext: extension
+            }
+        });
+    }
+
+    // cambiar nombre al archivo
+    let nombreArchivo = `${ new Date() }.${ extension }`;
+
+    // Use the mv() method to place the file somewhere on your server
+    archivo.mv(`uploads/pruebas/${ nombreArchivo }`, (err) => {
+        
+        if (err){
+            return res.status(500).json({
+                ok:false,
+                err
+            });
+        }
+            
+        res.json({
+            ok: true,
+            img: nombreArchivo
+        });
+
+    }); 
+    
+});
+
 app.put('/upload/:tipo/:id', verificacionToken, (req,res) => {
 
     let tipo = req.params.tipo;
